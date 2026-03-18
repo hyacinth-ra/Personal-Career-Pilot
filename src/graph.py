@@ -1,5 +1,3 @@
-# File: src/graph.py
-
 import operator
 from typing import Annotated, TypedDict, List, Union
 from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
@@ -7,19 +5,18 @@ from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END, START
 from langgraph.prebuilt import ToolNode
 
-# 1. Define the State
+
 class AgentState(TypedDict):
     # 'messages' will store the entire history. 
-    # Annotated with operator.add means new messages are appended, not overwritten.
     messages: Annotated[List[BaseMessage], operator.add]
 
-# 2. Define the Nodes
+# Define the Nodes
 def call_model(state: AgentState, llm_with_tools):
     """Calls the LLM to decide the next action."""
     response = llm_with_tools.invoke(state["messages"])
     return {"messages": [response]}
 
-# 3. Define the Router (Conditional Edge)
+# Define the Router
 def router(state: AgentState):
     """Determines if we should use a tool or finish."""
     last_message = state["messages"][-1]
@@ -37,12 +34,11 @@ def router(state: AgentState):
             
     return "tools"
 
-# 4. Building the Graph
+# Building the Graph
 def create_job_research_graph(llm_with_tools, tools):
     workflow = StateGraph(AgentState)
 
     # Add our nodes
-    # We use a lambda to pass our bound LLM into the node
     workflow.add_node("agent", lambda state: call_model(state, llm_with_tools))
     workflow.add_node("tools", ToolNode(tools))
 

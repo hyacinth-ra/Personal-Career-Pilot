@@ -17,9 +17,9 @@ class JobSearchInput(BaseModel):
 
 
 @tool
-def search_jobs(query: str):
+def search_jobs(query: str, location: str):
     """
-    Executes a filtered search for real job postings.
+    Executes a filtered search for real job postings in a given location.
     Automatically excludes common job-board spam and SEO traps.
     """
     # 1. Define the "Blacklist" of sites to ignore
@@ -34,14 +34,11 @@ def search_jobs(query: str):
         "whatjobs.com",
     ]
 
-    # 2. Build the Advanced Query
-    # -site: excludes the domain
-    # site:greenhouse.io | site:lever.co focuses on direct applicant tracking systems
     exclude_str = " ".join([f"-site:{site}" for site in blacklist])
 
     advanced_query = (
-        f"{query} \"Greater Toronto Area\" "
-        f"(site:greenhouse.io OR site:lever.co OR site:linkedin.com/jobs OR site:ca.indeed.com) "
+        f"{query} \"{location}\" "
+        f"(site:greenhouse.io OR site:lever.co OR site:linkedin.com/jobs/view OR site:ca.indeed.com/viewjob) "
         f"{exclude_str}"
     )
 
@@ -100,5 +97,4 @@ Respond with ONLY this JSON (no other text):
 
     return response.choices[0].message.content
 
-# A list of tools to pass to the agent later
 tools = [search_jobs, evaluate_job_fit]

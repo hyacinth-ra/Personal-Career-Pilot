@@ -18,14 +18,12 @@ def read_local_file(filepath: str) -> str:
 
     try:
         if ext == ".pdf":
-            # Extract text from PDF
             text = []
             with pymupdf.open(filepath) as doc:
                 for page in doc:
                     text.append(page.get_text())
             return "\n".join(text)
         else:
-            # Read as standard text (for .md, .txt, etc.)
             with open(filepath, "r", encoding="utf-8") as f:
                 return f.read()
     except Exception as e:
@@ -52,5 +50,4 @@ def save_job_results(filename: str, content: str) -> str:
         return f"❌ Failed to save file: {str(e)}"
 
 if __name__ == "__main__":
-    # This runs the server so it's ready to listen for commands
     mcp.run()

@@ -1,5 +1,4 @@
 
-# File: main.py
 import asyncio
 import os
 from dotenv import load_dotenv
@@ -40,27 +39,25 @@ async def main():
         api_key=os.getenv("GROQ_API_KEY")
     )
     
-    # 1. Define the server parameters correctly
+    # Define the server parameters
     server_params = StdioServerParameters(
         command="python3", # or "python" depending on your environment
         args=["mcp_servers/file_server.py"],
         env=os.environ.copy() # Passes your env vars (like GROQ_API_KEY) to the server if needed
     )
 
-    # 2. Establish the connection (The Nervous System)
+    # Establish the connection
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:
-            # Initialize the session
+        
             await session.initialize()
             
-            # 3. Load tools from the active session
             mcp_tools = await load_mcp_tools(session)
             
             # Combine local tools + MCP tools
             all_tools = [search_jobs, evaluate_job_fit] + mcp_tools
             llm_with_tools = llm.bind_tools(all_tools)
             
-            # Compile the graph
             app = create_job_research_graph(llm_with_tools, all_tools)
 
             inputs = {
@@ -68,10 +65,11 @@ async def main():
                     SystemMessage(content=f"""You are a Personal Career Pilot.
                     Follow this protocol:
                     1. FIRST: {resume_instruction}
-                       Then read these two files:
+                       Then read these three files:
                        - './knowledge_base/DreamRoles.txt' to get the user's preferred job titles.
                        - './knowledge_base/DreamComps.txt' to get the user's preferred companies.
-                    2. SECOND: Call 'search_jobs' ONCE FOR EACH role listed in DreamRoles.txt as a separate search query. For example, if DreamRoles.txt contains "Data Scientist", "ML Engineer", and "Software Developer", you must call 'search_jobs' three times with each title as the query. Collect all results into one combined list and remove any duplicate links.
+                       - './knowledge_base/Location.txt' to get the user's target location.
+                    2. SECOND: Call 'search_jobs' ONCE FOR EACH role listed in DreamRoles.txt, passing the role as 'query' and the location from Location.txt as 'location'. Collect all results into one combined list and remove any duplicate links.
                     3. THIRD: For each unique job in the combined list, use 'evaluate_job_fit' passing the resume text and the job snippet to get a fit score and identify missing skills. Prioritise jobs from companies listed in DreamComps.txt by adding +1 to their score.
                     4. FOURTH: From all evaluated jobs, keep only those scoring 6 or higher, sort them by fit score (highest first), and take the top 5. Use 'save_job_results' to save the ranked results.
 
@@ -93,7 +91,7 @@ async def main():
 
                     Repeat the block above for each of the top 5 jobs, ordered from highest to lowest fit score. Save the file as 'job_report.md'.
                     If the search fails, try different keywords based on the resume."""),
-                    HumanMessage(content="Find a job in the Greater Toronto Area that fits my background and save the details.")
+                    HumanMessage(content="Find a job that fits my background and save the details.")
                 ]
             }
 
