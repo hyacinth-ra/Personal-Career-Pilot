@@ -14,7 +14,6 @@ wheels/
 knowledge_base/*
 !knowledge_base/.gitkeep
 PROJECT_DOCS.md
-CLAUDE.md
 
 # generated/local data
 chroma_db/
